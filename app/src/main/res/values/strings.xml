@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Odometer</string>
+    <string name="odoFoundMessage">Odo device found</string>
+    <string name="permissionDeniedMessage">Permission denied for device</string>
+    <string name="deviceAttached">Device attached</string>
+    <string name="deviceDetachedMessage">Device detached</string>
+    <string name="portNullMessage">Port is null</string>
+    <string name="portNotOpenMessage">Port not open</string>
+    <string name="cdcSerialDeviceCreatedMessage">CDC serial device created</string>
+    <string name="deviceReadyMessage">Device ready</string>
+    <string name="connectText">Connect...</string>
+    <string name="deviceErrorMessage">Device error</string>
+    <string name="odoNotFoundMessage">Odo device not found</string>
+    <string name="onBackMessage">Are you sure?</string>
+    <string name="connectionCloseMessage">Connection will be close</string>
+    <string name="ok">OK</string>
+    <string name="cancelText">Cancel</string>
+    <string name="kmSuffix">" km"</string>
+    <string name="kmPerHourSuffix">" km/h"</string>
+    <string name="badResponseMessage">Wrong response from odo</string>
+</resources>
