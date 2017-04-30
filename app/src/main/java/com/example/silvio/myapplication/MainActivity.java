@@ -13,7 +13,6 @@ import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -149,17 +148,24 @@ public class MainActivity extends AppCompatActivity {
         super.onBackPressed();
     }
 
+    public static int convertToUnsignedInt(byte data){
+        if(data<0){
+            return 256+data;
+        }
+        return data;
+    }
+
     private void unpackAndShow(byte[] buffer) {
-        long km = (buffer[3] << 24) + (buffer[2] << 16) + (buffer[1] << 8) + buffer[0];
-        long delta = (buffer[5] << 8) + buffer[4];
+        long km = (convertToUnsignedInt(buffer[3]) << 24) + (convertToUnsignedInt(buffer[2]) << 16) + (convertToUnsignedInt(buffer[1]) << 8) + convertToUnsignedInt(buffer[0]);
+        long delta = (convertToUnsignedInt(buffer[5]) << 8) + convertToUnsignedInt(buffer[4]);
 
         double kmToShow = km * KM_FACTOR;
         double deltaToShow = delta * DELTA_FACTOR;
 
         TextView disTextView = (TextView) findViewById(R.id.distanceTextView);
         TextView speedTextView = (TextView) findViewById(R.id.speedTextView);
-        disTextView.setText(String.format("%6.2f", kmToShow) + getString(R.string.kmSuffix));
-        speedTextView.setText(String.format("%4.2f", deltaToShow) + getString(R.string.kmPerHourSuffix));
+        disTextView.setText(String.format("%7.2f", kmToShow) + getString(R.string.kmSuffix));
+        speedTextView.setText(String.format("%5.2f", deltaToShow) + getString(R.string.kmPerHourSuffix));
     }
 
     public void onClickStart(View view) {
