@@ -21,29 +21,59 @@ import com.hoho.android.usbserial.driver.CdcAcmSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    String ODO_FILE_NAME = "odoSave";
     public static final String ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION";
     public static final int VENDOR_ID = 0x04D8;
     public static final double KM_FACTOR = 2.0 * Math.PI * 24.5 / 28.0 / 100.0 / 1000.0;
     public static final double DELTA_FACTOR = 2.0 * Math.PI * 24.5 / 28.0 / 100.0 / 1000.0 * 2.0 * 3600.0;
+    private static final double TRIP_THRESHOLD_GREEN = 30.0;
+    private static final double TRIP_THRESHOLD_YELLOW = 40.0;
     private UsbManager usbManager;
     private UsbDeviceConnection connection = null;
     private UsbDevice device;
     private UsbSerialPort port;
     private final Handler handler = new Handler();
+    private long tripA = 0;
+    private long tripB = 0;
+    private long lastRead = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        tryToLoadTrips();
         usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         registerReceiver(mUsbReceiver, filter);
+    }
+
+    private void tryToLoadTrips() {
+        try {
+            FileInputStream fos = openFileInput(ODO_FILE_NAME);
+            int available = fos.available();
+            byte[] bytes = new byte[available];
+            fos.read(bytes);
+            String string = new String(bytes);
+            String[] split = string.split("\\,");
+            tripA = Long.valueOf(split[0]);
+            tripB = Long.valueOf(split[1]);
+            lastRead = Long.valueOf(split[2]);
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private boolean running;
@@ -145,12 +175,26 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        tryToSaveTrips();
         super.onBackPressed();
     }
 
-    public static int convertToUnsignedInt(byte data){
-        if(data<0){
-            return 256+data;
+    private void tryToSaveTrips() {
+        try {
+            FileOutputStream fos = openFileOutput(ODO_FILE_NAME, Context.MODE_PRIVATE);
+            String string = String.valueOf(tripA) + "," + String.valueOf(tripB) + "," + String.valueOf(lastRead);
+            fos.write(string.getBytes());
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static int convertToUnsignedInt(byte data) {
+        if (data < 0) {
+            return 256 + data;
         }
         return data;
     }
@@ -166,6 +210,9 @@ public class MainActivity extends AppCompatActivity {
         TextView speedTextView = (TextView) findViewById(R.id.speedTextView);
         disTextView.setText(String.format("%7.2f", kmToShow) + getString(R.string.kmSuffix));
         speedTextView.setText(String.format("%5.2f", deltaToShow) + getString(R.string.kmPerHourSuffix));
+        lastRead = km;
+        updateTripView(tripA, (TextView) findViewById(R.id.tripATextView));
+        updateTripView(tripB, (TextView) findViewById(R.id.tripBTextView));
     }
 
     public void onClickStart(View view) {
@@ -180,6 +227,28 @@ public class MainActivity extends AppCompatActivity {
                     usbManager.requestPermission(device, pi);
                 }
             }
+        }
+    }
+
+    public void onLongTripClick(View view) {
+        if (view == findViewById(R.id.tripATextView)) {
+            tripA = lastRead;
+            updateTripView(tripA, (TextView) view);
+        } else if (view == findViewById(R.id.tripBTextView)) {
+            tripB = lastRead;
+            updateTripView(tripB, (TextView) view);
+        }
+    }
+
+    private void updateTripView(long trip, TextView view) {
+        double tripToShow = (lastRead - trip) * KM_FACTOR;
+        view.setText(String.format("%7.2f", tripToShow) + getString(R.string.kmSuffix));
+        if (tripToShow < TRIP_THRESHOLD_GREEN) {
+            view.setTextColor(getResources().getColor(R.color.colorGreen));
+        } else if (tripToShow < TRIP_THRESHOLD_YELLOW) {
+            view.setTextColor(getResources().getColor(R.color.colorYellow));
+        } else {
+            view.setTextColor(getResources().getColor(R.color.colorRed));
         }
     }
 }
