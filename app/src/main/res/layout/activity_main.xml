@@ -61,6 +61,7 @@
         android:layout_alignParentRight="true"
         android:layout_alignParentStart="true"
         android:textAlignment="center"
+        android:textColor="@color/colorAccent"
         android:textAppearance="@style/TextAppearance.AppCompat.Display4"
         tools:text="123" />
 
