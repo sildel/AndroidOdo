@@ -13,6 +13,8 @@ import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,7 +26,6 @@ import com.hoho.android.usbserial.driver.UsbSerialPort;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,6 +56,22 @@ public class MainActivity extends AppCompatActivity {
         usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
         IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         registerReceiver(mUsbReceiver, filter);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_connect) {
+            onClickStart();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void tryToLoadTrips() {
@@ -215,7 +232,7 @@ public class MainActivity extends AppCompatActivity {
         updateTripView(tripB, (TextView) findViewById(R.id.tripBTextView));
     }
 
-    public void onClickStart(View view) {
+    public void onClickStart() {
         HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
         if (!deviceList.isEmpty()) {
             for (Map.Entry<String, UsbDevice> entry : deviceList.entrySet()) {
